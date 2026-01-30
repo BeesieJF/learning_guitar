@@ -1,0 +1,1624 @@
+import React, { useState, useEffect } from 'react';
+import { Trophy, Star, Music, Award, ChevronRight, Lock, Unlock, Users, Target, Clock, CheckCircle } from 'lucide-react';
+
+const GuitarLearningApp = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [showLogin, setShowLogin] = useState(true);
+  const [activeTab, setActiveTab] = useState('lessons');
+  const [username, setUsername] = useState('');
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
+  // Initialize users from storage or create defaults
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const result = await window.storage.list('user:');
+        if (result && result.keys && result.keys.length > 0) {
+          const loadedUsers = await Promise.all(
+            result.keys.map(async (key) => {
+              const data = await window.storage.get(key);
+              return data ? JSON.parse(data.value) : null;
+            })
+          );
+          setUsers(loadedUsers.filter(u => u !== null));
+        } else {
+          // Create demo users
+          const demoUsers = [
+            { id: 'demo1', name: 'RockStar Emma', level: 1, xp: 450, completedLessons: [1, 2, 3], streak: 5 },
+            { id: 'demo2', name: 'Guitar Hero Max', level: 2, xp: 680, completedLessons: [1, 2, 3, 4], streak: 3 },
+            { id: 'demo3', name: 'Melody Maya', level: 1, xp: 320, completedLessons: [1, 2], streak: 2 }
+          ];
+          setUsers(demoUsers);
+          // Save demo users
+          for (const user of demoUsers) {
+            await window.storage.set(`user:${user.id}`, JSON.stringify(user));
+          }
+        }
+      } catch (error) {
+        console.log('Storage not available, using in-memory storage');
+        setUsers([
+          { id: 'demo1', name: 'RockStar Emma', level: 1, xp: 450, completedLessons: [1, 2, 3], streak: 5 },
+          { id: 'demo2', name: 'Guitar Hero Max', level: 2, xp: 680, completedLessons: [1, 2, 3, 4], streak: 3 },
+          { id: 'demo3', name: 'Melody Maya', level: 1, xp: 320, completedLessons: [1, 2], streak: 2 }
+        ]);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const lessonContent = {
+    1: {
+      title: "Parts of the Guitar",
+      introduction: "Welcome to your guitar journey! Before we play, let's learn what makes up your guitar.",
+      sections: [
+        {
+          heading: "Main Parts of the Guitar",
+          content: [
+            "🎸 HEADSTOCK - The top part where you tune the strings",
+            "🎸 TUNING PEGS - Turn these to make strings tighter or looser",
+            "🎸 NUT - The white strip where strings rest at the top",
+            "🎸 NECK - The long part you hold",
+            "🎸 FRETS - Metal bars on the neck (your guitar has about 19-22)",
+            "🎸 FRETBOARD - The front of the neck where you press strings",
+            "🎸 BODY - The big wooden part that makes sound louder",
+            "🎸 SOUND HOLE - The circle in the middle that lets sound out",
+            "🎸 BRIDGE - Where strings attach at the bottom",
+            "🎸 STRINGS - 6 wires you pluck (we'll learn their names next!)"
+          ]
+        },
+        {
+          heading: "The 6 Strings (From Thickest to Thinnest)",
+          content: [
+            "Remember: E A D G B E",
+            "Trick to remember: 'Elephants And Donkeys Grow Big Ears'",
+            "String 6 (thickest): E - sounds LOW",
+            "String 5: A",
+            "String 4: D", 
+            "String 3: G",
+            "String 2: B",
+            "String 1 (thinnest): E - sounds HIGH"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Touch each part of your guitar as you name it out loud",
+        "✅ Point to the headstock, neck, and body",
+        "✅ Count all the frets on your guitar",
+        "✅ Pluck each string from 6 to 1 and say its name",
+        "✅ Draw a simple guitar and label 5 parts"
+      ],
+      tips: [
+        "💡 The LOW E (string 6) is the thickest - think of it as the 'fat' string",
+        "💡 The HIGH E (string 1) is the thinnest - it sounds high like a bird chirping"
+      ]
+    },
+    2: {
+      title: "How to Hold Your Guitar",
+      introduction: "Good posture = better playing! Let's learn the RIGHT way to hold your guitar.",
+      sections: [
+        {
+          heading: "Sitting Position",
+          content: [
+            "1. Sit on a chair with no arms, feet flat on the floor",
+            "2. Rest the guitar's waist (curvy part) on your RIGHT thigh",
+            "3. The neck should point slightly upward (like 30 degrees)",
+            "4. Keep your back straight - pretend a string pulls you up from your head!",
+            "5. The guitar should feel balanced - you shouldn't need to hold it up"
+          ]
+        },
+        {
+          heading: "Right Hand Position (Strumming Hand)",
+          content: [
+            "1. Rest your right forearm on the top of the guitar body",
+            "2. Your hand should hang naturally over the sound hole",
+            "3. Make a gentle fist, then relax your fingers",
+            "4. Your thumb should be free to move up and down"
+          ]
+        },
+        {
+          heading: "Left Hand Position (Fretting Hand)",
+          content: [
+            "1. Curve your fingers like you're holding a small ball",
+            "2. Your thumb should be behind the neck (not over the top!)",
+            "3. Keep your fingertips ready to press down on strings",
+            "4. Leave space between your palm and the neck"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Sit with your guitar and check: Are your feet flat? Back straight?",
+        "✅ Hold the guitar for 2 minutes without looking - does it feel balanced?",
+        "✅ Practice thumb position: Place thumb behind neck, check you can see it from the front",
+        "✅ Make the 'ball shape' with your left hand 10 times",
+        "✅ Have someone take a photo of you holding the guitar - check your posture!"
+      ],
+      tips: [
+        "💡 If your neck or shoulders hurt, you're holding it wrong - relax!",
+        "💡 Never grip the neck tightly - stay relaxed like you're holding a butterfly"
+      ]
+    },
+    3: {
+      title: "Tuning Basics",
+      introduction: "A guitar that's out of tune sounds terrible! Let's learn to tune your guitar.",
+      sections: [
+        {
+          heading: "Why Tuning Matters",
+          content: [
+            "Even the best players sound bad on an out-of-tune guitar",
+            "You should tune EVERY time you play",
+            "It trains your ear to recognize correct notes"
+          ]
+        },
+        {
+          heading: "How to Tune (Using an App)",
+          content: [
+            "1. Download a FREE tuner app: 'GuitarTuna' or 'Fender Tune'",
+            "2. Turn on the app and allow microphone access",
+            "3. Pluck the 6th string (thickest E string)",
+            "4. Watch the app - it shows if you're too LOW or too HIGH",
+            "5. Turn the tuning peg: Tighten to go higher, Loosen to go lower",
+            "6. Keep adjusting until the app shows GREEN or says 'IN TUNE'",
+            "7. Repeat for all 6 strings: E-A-D-G-B-E"
+          ]
+        },
+        {
+          heading: "Tuning Peg Rules",
+          content: [
+            "📌 Turn SLOWLY - big turns can break strings!",
+            "📌 Always tune UP to the note (loosen then tighten)",
+            "📌 The tighter the string, the higher the sound",
+            "📌 If a string breaks, don't panic - it happens to everyone!"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Download a tuner app on your phone or tablet",
+        "✅ Tune all 6 strings starting from the 6th (LOW E)",
+        "✅ Pluck each string and listen to the sound",
+        "✅ Mess up the tuning on purpose, then tune it back!",
+        "✅ Challenge: Tune your guitar 3 days in a row before playing"
+      ],
+      tips: [
+        "💡 Strings go out of tune faster when they're NEW",
+        "💡 Temperature changes can affect tuning - retune if your guitar feels cold or warm"
+      ]
+    },
+    4: {
+      title: "Your First Chord: E Minor",
+      introduction: "Time to play your first chord! E minor (Em) is the EASIEST chord - you only use 2 fingers!",
+      sections: [
+        {
+          heading: "What is a Chord?",
+          content: [
+            "A chord = playing multiple strings at the same time",
+            "Chords sound FULL and beautiful",
+            "Most songs use just 3-4 chords!"
+          ]
+        },
+        {
+          heading: "How to Play E Minor (Em)",
+          content: [
+            "FINGER PLACEMENT:",
+            "• 2nd finger (middle) - 2nd fret, 5th string (A string)",
+            "• 3rd finger (ring) - 2nd fret, 4th string (D string)",
+            "• All other strings are OPEN (play without pressing)",
+            "",
+            "STEP BY STEP:",
+            "1. Place your middle finger on the 2nd fret of the A string",
+            "2. Place your ring finger on the 2nd fret of the D string",
+            "3. Press down FIRMLY with your fingertips",
+            "4. Strum all 6 strings from top to bottom",
+            "5. Listen - it should sound smooth and pretty!"
+          ]
+        },
+        {
+          heading: "Common Mistakes to Avoid",
+          content: [
+            "❌ Pressing too lightly - press FIRM until you hear clear notes",
+            "❌ Touching other strings - keep fingers curved",
+            "❌ Putting fingers far from the fret - place them CLOSE to the metal fret bar"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Form the Em chord shape slowly 5 times",
+        "✅ Strum the chord and count to 4. Repeat 10 times",
+        "✅ Play each string individually - do they all sound clear?",
+        "✅ Take your fingers off, then put them back on. Do this 10 times",
+        "✅ Play Em and hold it for 10 seconds without looking at your fingers"
+      ],
+      tips: [
+        "💡 Your fingertips might hurt at first - this is NORMAL! They'll get tougher",
+        "💡 If a string sounds 'buzzy', press harder or move your finger closer to the fret"
+      ]
+    },
+    5: {
+      title: "A Minor Chord",
+      introduction: "You've mastered Em! Now let's learn A minor (Am) - another easy chord.",
+      sections: [
+        {
+          heading: "How to Play A Minor (Am)",
+          content: [
+            "FINGER PLACEMENT:",
+            "• 1st finger (index) - 1st fret, 2nd string (B string)",
+            "• 2nd finger (middle) - 2nd fret, 4th string (D string)",
+            "• 3rd finger (ring) - 2nd fret, 3rd string (G string)",
+            "• DON'T play the 6th string (low E)",
+            "",
+            "STEP BY STEP:",
+            "1. Put your index finger on the 1st fret, B string",
+            "2. Put your middle finger on the 2nd fret, D string",
+            "3. Put your ring finger on the 2nd fret, G string",
+            "4. Strum from the 5th string DOWN (skip the 6th string!)",
+            "5. All three fingers should form a little diagonal line"
+          ]
+        },
+        {
+          heading: "Switching Between Em and Am",
+          content: [
+            "This is your first chord change - the SECRET to playing songs!",
+            "",
+            "SLOW METHOD:",
+            "1. Play Em, strum 4 times",
+            "2. Lift all fingers off",
+            "3. Form Am shape slowly",
+            "4. Strum 4 times",
+            "5. Repeat 10 times",
+            "",
+            "SPEED TIP: Your 2nd finger stays on the same fret! Only other fingers move."
+          ]
+        }
+      ],
+      activities: [
+        "✅ Play Am chord clearly 10 times",
+        "✅ Switch: Em (strum 4x) → Am (strum 4x) → repeat 5 times",
+        "✅ Challenge: Switch between Em and Am without looking - feel the shapes!",
+        "✅ Speed drill: Switch every 2 strums (Em-Em, Am-Am, Em-Em, Am-Am)",
+        "✅ Play each string of Am individually - all clear?"
+      ],
+      tips: [
+        "💡 It's OKAY to be slow at first - speed comes with practice",
+        "💡 Focus on making each chord sound CLEAN before going faster"
+      ]
+    },
+    6: {
+      title: "Strumming Patterns",
+      introduction: "You know 2 chords! Now let's make them sound like MUSIC with rhythm.",
+      sections: [
+        {
+          heading: "What is Strumming?",
+          content: [
+            "Strumming = brushing across the strings with rhythm",
+            "The PATTERN you strum creates the song's feel",
+            "All songs have a repeating pattern"
+          ]
+        },
+        {
+          heading: "Basic Down Strum",
+          content: [
+            "1. Make a loose fist with your right hand",
+            "2. Use your thumb or a pick",
+            "3. Brush DOWN across the strings",
+            "4. Start from the thickest string and go to the thinnest",
+            "5. Let your wrist be loose and relaxed",
+            "",
+            "Count: 1, 2, 3, 4 (one down strum per number)",
+            "Practice: DOWN, DOWN, DOWN, DOWN (repeat)"
+          ]
+        },
+        {
+          heading: "Down-Down-Up Pattern",
+          content: [
+            "This is the MOST COMMON strumming pattern!",
+            "",
+            "Pattern: DOWN, DOWN, UP, DOWN, UP",
+            "Count:   1,    2,    +,  3,    +",
+            "",
+            "The '+' means 'and' - so you say: '1, 2-and, 3-and'",
+            "",
+            "PRACTICE SLOWLY:",
+            "1. Play Em with this pattern",
+            "2. Say out loud: 'DOWN, DOWN, up, DOWN, up'",
+            "3. Repeat until it feels natural",
+            "4. Then try with Am"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice down strums: 20 times slowly, 20 times medium speed",
+        "✅ Say 'DOWN-DOWN-up-DOWN-up' out loud 10 times",
+        "✅ Play Em with the new pattern 10 times",
+        "✅ Play Am with the new pattern 10 times",
+        "✅ Combine: Em (pattern 2x) → Am (pattern 2x) → repeat 5 times"
+      ],
+      tips: [
+        "💡 Keep your wrist LOOSE - pretend you're shaking water off your hand",
+        "💡 Don't hit the strings too hard - let the guitar do the work!"
+      ]
+    },
+    7: {
+      title: "Your First Song!",
+      introduction: "🎉 Time to play a REAL SONG! You'll use Em and Am with your strumming pattern.",
+      sections: [
+        {
+          heading: "Song: 'Simple Melody'",
+          content: [
+            "This song uses only Em and Am - you already know these!",
+            "",
+            "SONG STRUCTURE:",
+            "Em (8 strums) → Am (8 strums) → repeat 4 times",
+            "",
+            "Strumming: DOWN, DOWN, up, DOWN, up (repeat)",
+            "Count each time: 1, 2-and, 3-and"
+          ]
+        },
+        {
+          heading: "How to Practice the Song",
+          content: [
+            "STEP 1: Play SLOWLY first",
+            "- Em for 8 strums",
+            "- Switch to Am for 8 strums",
+            "- Don't worry about mistakes!",
+            "",
+            "STEP 2: Smooth transitions",
+            "- Focus on switching chords quickly",
+            "- It's okay if there's a tiny pause",
+            "",
+            "STEP 3: Play with feeling",
+            "- Once you can play it, add emotion!",
+            "- Try playing softly, then loudly",
+            "- Make it YOUR song"
+          ]
+        },
+        {
+          heading: "Performance Checklist",
+          content: [
+            "✓ Good posture",
+            "✓ Guitar in tune",
+            "✓ Clear chord sounds",
+            "✓ Steady rhythm",
+            "✓ Smooth switches",
+            "✓ Confidence!"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Play the song 3 times SLOWLY",
+        "✅ Play the song 3 times at MEDIUM speed",
+        "✅ Record yourself playing - listen back!",
+        "✅ Play for a family member or friend",
+        "✅ Challenge: Play the whole song without stopping"
+      ],
+      tips: [
+        "💡 If you mess up, keep going! Real musicians do this all the time",
+        "💡 Celebrate! You just played your first song! 🎸🎉"
+      ]
+    },
+    8: {
+      title: "C Major Chord",
+      introduction: "Welcome to intermediate! C major is one of the MOST important chords you'll ever learn.",
+      sections: [
+        {
+          heading: "How to Play C Major (C)",
+          content: [
+            "FINGER PLACEMENT:",
+            "• 1st finger (index) - 1st fret, 2nd string (B string)",
+            "• 2nd finger (middle) - 2nd fret, 4th string (D string)",
+            "• 3rd finger (ring) - 3rd fret, 5th string (A string)",
+            "• DON'T play the 6th string (low E)",
+            "",
+            "TRICKY PART:",
+            "Your fingers need to STRETCH a bit",
+            "The ring finger goes further than you're used to!"
+          ]
+        },
+        {
+          heading: "Common C Chord Problems & Fixes",
+          content: [
+            "Problem: Buzzing on the 1st string",
+            "Fix: Make sure your index finger is pressing FIRMLY",
+            "",
+            "Problem: Can't reach the 3rd fret",
+            "Fix: Bring your thumb BEHIND the neck, not over it",
+            "",
+            "Problem: Fingers touching other strings",
+            "Fix: Curve your fingers more - make that 'ball' shape!"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Form C chord 10 times slowly, checking each finger",
+        "✅ Play each string one by one - make sure all are clear",
+        "✅ Strum C chord 20 times, counting each strum",
+        "✅ Switch: Em → Am → C → repeat 5 times",
+        "✅ Hold C chord for 30 seconds without looking"
+      ],
+      tips: [
+        "💡 C chord feels hard at first - EVERYONE struggles with it!",
+        "💡 Your hand will get more flexible with daily practice"
+      ]
+    },
+    9: {
+      title: "G Major Chord",
+      introduction: "G major has a BIG, full sound. It's a favorite chord in thousands of songs!",
+      sections: [
+        {
+          heading: "How to Play G Major (G)",
+          content: [
+            "FINGER PLACEMENT (Standard way):",
+            "• 1st finger (index) - 2nd fret, 5th string (A string)",
+            "• 2nd finger (middle) - 3rd fret, 6th string (low E string)",
+            "• 3rd finger (ring) - 3rd fret, 1st string (high E string)",
+            "• Strum ALL 6 strings!",
+            "",
+            "This chord uses all your fingers stretched out wide"
+          ]
+        },
+        {
+          heading: "The 4-Chord Magic Progression",
+          content: [
+            "You now know 4 POWERFUL chords: Em, Am, C, G",
+            "These 4 chords are in HUNDREDS of popular songs!",
+            "",
+            "MAGIC PROGRESSION:",
+            "C → G → Am → Em (repeat)",
+            "8 strums each chord",
+            "",
+            "This progression sounds AMAZING and is used in:",
+            "- Pop songs, Rock songs, Folk songs",
+            "- Once you master this, you can play countless songs!"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice G chord formation 15 times",
+        "✅ Play the Magic Progression slowly 3 times: C-G-Am-Em",
+        "✅ Speed it up: Play the progression at medium speed 5 times",
+        "✅ Create your own pattern: Mix the 4 chords in any order!",
+        "✅ Challenge: Play all 4 chords in a loop for 2 minutes straight"
+      ],
+      tips: [
+        "💡 G chord has a 'wide' shape - stretch your fingers but stay relaxed",
+        "💡 The 4-chord progression is your ticket to playing REAL songs!"
+      ]
+    },
+    10: {
+      title: "D Major Chord",
+      introduction: "D major is bright and happy! It's super common in upbeat songs.",
+      sections: [
+        {
+          heading: "How to Play D Major (D)",
+          content: [
+            "FINGER PLACEMENT:",
+            "• 1st finger (index) - 2nd fret, 3rd string (G string)",
+            "• 2nd finger (middle) - 2nd fret, 1st string (high E string)",
+            "• 3rd finger (ring) - 3rd fret, 2nd string (B string)",
+            "• DON'T play strings 5 and 6 (A and low E)",
+            "• Only strum the top 4 strings!",
+            "",
+            "D is a 'small' chord - it sounds bright and focused"
+          ]
+        },
+        {
+          heading: "Popular Chord Progressions with D",
+          content: [
+            "PROGRESSION 1: D → A → G → D",
+            "(You'll learn A chord soon!)",
+            "",
+            "PROGRESSION 2: G → D → Em → C",
+            "This is SUPER common in rock and pop!",
+            "",
+            "PROGRESSION 3: D → G → D → A",
+            "Used in country and folk music"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Form D chord cleanly 10 times",
+        "✅ Practice strumming ONLY the top 4 strings (don't hit the bottom 2!)",
+        "✅ Play: G → D → Em → C (8 strums each, repeat 5 times)",
+        "✅ Experiment: Create your own progression using all 5 chords you know",
+        "✅ Speed drill: Switch between D and G quickly (2 strums each, 20 times)"
+      ],
+      tips: [
+        "💡 Muting the low strings takes practice - rest your thumb lightly on them",
+        "💡 D chord sounds best when you strum with energy!"
+      ]
+    },
+    11: {
+      title: "Advanced Strumming",
+      introduction: "Let's level up your rhythm! Learn muting and more complex patterns.",
+      sections: [
+        {
+          heading: "Palm Muting",
+          content: [
+            "Palm muting = resting your palm lightly on the strings near the bridge",
+            "",
+            "HOW TO DO IT:",
+            "1. Rest the edge of your right palm on the strings near the bridge",
+            "2. Not too hard - just touching lightly",
+            "3. Strum - it should sound 'chunky' or 'muffled'",
+            "4. Lift your palm - back to normal sound",
+            "",
+            "This creates a 'chunk-chunk' rhythm sound in rock music!"
+          ]
+        },
+        {
+          heading: "Advanced Pattern: Island Strum",
+          content: [
+            "Pattern: DOWN, DOWN-up, UP-down, UP",
+            "Count:   1,    2  +,  +  3,    +",
+            "",
+            "Say it: 'DOWN, down-UP, up-DOWN, UP'",
+            "",
+            "This pattern sounds tropical and fun!",
+            "",
+            "PRACTICE STEPS:",
+            "1. Say the pattern out loud 10 times",
+            "2. Do the hand motion without the guitar",
+            "3. Try it slowly on one chord (C works great)",
+            "4. Speed up gradually"
+          ]
+        },
+        {
+          heading: "Combining Techniques",
+          content: [
+            "Try this exercise:",
+            "C chord - normal strumming (4 strums)",
+            "C chord - palm muted (4 strums)",
+            "G chord - normal strumming (4 strums)",
+            "G chord - palm muted (4 strums)",
+            "",
+            "This teaches you DYNAMICS - making music louder and softer"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice palm muting on Em chord - 20 strums",
+        "✅ Learn the Island Strum pattern: practice for 10 minutes",
+        "✅ Play the Magic Progression (C-G-Am-Em) with Island Strum",
+        "✅ Alternate: 4 strums normal, 4 strums muted (on any chord)",
+        "✅ Challenge: Create a rhythm using muted and normal strums"
+      ],
+      tips: [
+        "💡 Don't press too hard when palm muting - light touch only!",
+        "💡 Complex patterns feel awkward at first - slow practice is KEY"
+      ]
+    },
+    12: {
+      title: "Reading Chord Charts",
+      introduction: "Chord charts are like maps for songs! Learn to read them and unlock THOUSANDS of songs.",
+      sections: [
+        {
+          heading: "What is a Chord Chart?",
+          content: [
+            "A chord chart shows you:",
+            "1. Which chords to play",
+            "2. When to switch chords",
+            "3. The structure of the song",
+            "",
+            "Example:",
+            "[C] I've been [G] practicing [Am] every [Em] day",
+            "       ↑           ↑              ↑           ↑",
+            "The brackets show when to switch chords!"
+          ]
+        },
+        {
+          heading: "Reading a Simple Chart",
+          content: [
+            "VERSE:",
+            "[C] Happy [G] birthday to [Am] you [Em]",
+            "[C] Happy [G] birthday to [Am] you [Em]",
+            "",
+            "CHORUS:",
+            "[D] Happy birthday dear [G] friend",
+            "[C] Happy [G] birthday to [Am] you [Em]",
+            "",
+            "How to read:",
+            "- Each bracket means 'play this chord'",
+            "- Sing or hum the words",
+            "- Switch chords at the brackets",
+            "- Usually 4 strums per chord (unless noted)"
+          ]
+        },
+        {
+          heading: "Chord Chart Symbols",
+          content: [
+            "| = Bar line (marks musical measures)",
+            "/ = Keep playing the same chord",
+            "x2 = Play this section twice",
+            "(4x) = Play this 4 times"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Read this chart and play it: [C] / [G] / [Am] / [Em] / (repeat 4x)",
+        "✅ Practice 'Happy Birthday' from the chart above",
+        "✅ Find a simple song online (search: 'easy guitar chord chart')",
+        "✅ Write your own 4-chord chart for an imaginary song",
+        "✅ Challenge: Play a chart without stopping to think about chords"
+      ],
+      tips: [
+        "💡 Start by just changing chords - add strumming once you're comfortable",
+        "💡 Most beginner songs use 3-5 chords you already know!"
+      ]
+    },
+    13: {
+      title: "Finger Exercises",
+      introduction: "Build strength, speed, and coordination! These exercises make you a better player.",
+      sections: [
+        {
+          heading: "The Spider Exercise",
+          content: [
+            "This builds finger independence and strength",
+            "",
+            "ON THE 6TH STRING (LOW E):",
+            "1. Index finger - 1st fret (pluck)",
+            "2. Middle finger - 2nd fret (pluck)",
+            "3. Ring finger - 3rd fret (pluck)",
+            "4. Pinky finger - 4th fret (pluck)",
+            "",
+            "Then go BACKWARDS:",
+            "Pinky - Ring - Middle - Index",
+            "",
+            "Repeat on each string (6 → 5 → 4 → 3 → 2 → 1)",
+            "Then go back down (1 → 2 → 3 → 4 → 5 → 6)"
+          ]
+        },
+        {
+          heading: "The Chromatic Exercise",
+          content: [
+            "Play: 1-2-3-4, 2-3-4-5, 3-4-5-6, 4-5-6-7...",
+            "",
+            "MEANS:",
+            "- Frets 1,2,3,4 on the 6th string",
+            "- Then frets 2,3,4,5 on the 6th string",
+            "- Keep moving up the neck",
+            "",
+            "This builds STAMINA and ACCURACY"
+          ]
+        },
+        {
+          heading: "Chord Change Speed Drill",
+          content: [
+            "Set a timer for 1 minute",
+            "",
+            "DRILL 1: How many times can you switch C → G?",
+            "DRILL 2: How many times can you switch G → D?",
+            "DRILL 3: How many times can you switch Em → Am?",
+            "",
+            "Track your record and beat it each week!"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Spider exercise - 5 minutes (up and down all strings)",
+        "✅ Chromatic exercise - 3 minutes",
+        "✅ Chord speed drill - 1 minute each pair",
+        "✅ Record your speeds and try to improve tomorrow!",
+        "✅ Stretch your fingers before and after exercises"
+      ],
+      tips: [
+        "💡 SLOW practice builds FAST playing - don't rush!",
+        "💡 If your hand hurts, take a break - don't push through pain"
+      ]
+    },
+    14: {
+      title: "Your Second Song!",
+      introduction: "Time for a full song with verses and a chorus! You're ready for this!",
+      sections: [
+        {
+          heading: "Song: 'Mountain Road'",
+          content: [
+            "VERSE:",
+            "[C] Walking down the [G] mountain road",
+            "[Am] Feeling free with [Em] nowhere to go",
+            "[C] Sun is setting [G] in the sky",
+            "[Am] Stars will guide me [Em] by and by",
+            "",
+            "CHORUS:",
+            "[D] Oh, the [G] journey's long",
+            "[C] But I'll [G] stay strong",
+            "[D] With my [G] guitar [C] and a [Em] song",
+            "",
+            "Strumming: Use the Island Strum or Down-Down-Up pattern",
+            "4 strums per chord"
+          ]
+        },
+        {
+          heading: "Performance Tips",
+          content: [
+            "1. MEMORIZE the chord progression first",
+            "2. Practice SLOWLY until you know it by heart",
+            "3. Then add the strumming pattern",
+            "4. Finally, sing or hum along (optional)",
+            "",
+            "Don't worry about singing perfectly - focus on guitar!",
+            "",
+            "STRUCTURE: Verse, Chorus, Verse, Chorus"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Learn the verse chord changes (repeat 10 times)",
+        "✅ Learn the chorus chord changes (repeat 10 times)",
+        "✅ Play the whole song slowly 3 times",
+        "✅ Play at regular speed 5 times",
+        "✅ Perform the entire song for someone!"
+      ],
+      tips: [
+        "💡 It's okay to make mistakes during performance - keep playing!",
+        "💡 You've now completed 2 weeks of lessons - you're a real guitarist! 🎸"
+      ]
+    },
+    15: {
+      title: "Barre Chords Introduction",
+      introduction: "Barre chords are POWERFUL! They let you play hundreds of new chords.",
+      sections: [
+        {
+          heading: "What is a Barre Chord?",
+          content: [
+            "Barre chord = using one finger to press multiple strings at once",
+            "Your index finger acts like a 'bar' across the fretboard",
+            "",
+            "WHY learn them?",
+            "- Play any chord up and down the neck",
+            "- Unlock advanced songs",
+            "- Sound like a pro!"
+          ]
+        },
+        {
+          heading: "F Major - Your First Barre Chord",
+          content: [
+            "F major is the most common barre chord",
+            "",
+            "FINGER PLACEMENT:",
+            "• Index finger - 1st fret, ALL 6 strings (bar them!)",
+            "• Middle finger - 2nd fret, 3rd string (G string)",
+            "• Ring finger - 3rd fret, 5th string (A string)",
+            "• Pinky finger - 3rd fret, 4th string (D string)",
+            "",
+            "TIPS FOR SUCCESS:",
+            "1. Press with the SIDE of your index finger, not the pad",
+            "2. Keep your thumb BEHIND the neck for support",
+            "3. Press FIRMLY - this takes strength!",
+            "4. It's okay if it doesn't sound good immediately"
+          ]
+        },
+        {
+          heading: "Building Barre Chord Strength",
+          content: [
+            "Exercise 1: Hold the barre (just the index finger) for 10 seconds",
+            "Exercise 2: Add other fingers one at a time",
+            "Exercise 3: Strum and adjust until all strings sound clear",
+            "",
+            "This might take DAYS or WEEKS - that's NORMAL!",
+            "Everyone struggles with barre chords at first"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice the index finger barre alone - 10 reps of 10 seconds each",
+        "✅ Form full F chord slowly - 10 times",
+        "✅ Strum F chord and adjust fingers until clear",
+        "✅ Progression: C → F → G → C (4 strums each, repeat 5x)",
+        "✅ Track progress: How long can you hold F chord? (Build up to 30 seconds)"
+      ],
+      tips: [
+        "💡 Your hand WILL get tired - take breaks every 2 minutes",
+        "💡 If F is too hard, start with B minor (3rd fret barre) - it's easier!"
+      ]
+    },
+    16: {
+      title: "Power Chords",
+      introduction: "Power chords = ROCK music! These simple two-finger chords sound HUGE!",
+      sections: [
+        {
+          heading: "What are Power Chords?",
+          content: [
+            "Power chords use only 2 or 3 strings",
+            "They sound 'powerful' and 'punchy'",
+            "Used in rock, punk, and metal music",
+            "",
+            "They're written as: E5, A5, D5 (the '5' means power chord)"
+          ]
+        },
+        {
+          heading: "E5 Power Chord",
+          content: [
+            "FINGER PLACEMENT:",
+            "• Index finger - 0 fret, 6th string (just the open E)",
+            "• Ring finger - 2nd fret, 5th string (A string)",
+            "• Pinky finger - 2nd fret, 4th string (D string)",
+            "• Only play strings 6, 5, and 4",
+            "",
+            "This is the EASIEST power chord!"
+          ]
+        },
+        {
+          heading: "A5 Power Chord",
+          content: [
+            "FINGER PLACEMENT:",
+            "• Index finger - 0 fret, 5th string (open A)",
+            "• Ring finger - 2nd fret, 4th string (D string)",
+            "• Pinky finger - 2nd fret, 3rd string (G string)",
+            "• Only play strings 5, 4, and 3"
+          ]
+        },
+        {
+          heading: "Rock Progression",
+          content: [
+            "E5 (8 strums) → A5 (8 strums) → repeat",
+            "",
+            "Add palm muting for extra rock sound!",
+            "Strum with ENERGY and ATTITUDE"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice E5 power chord - 20 strums",
+        "✅ Practice A5 power chord - 20 strums",
+        "✅ Switch between E5 and A5 - 10 times",
+        "✅ Play E5-A5 progression with palm muting",
+        "✅ Create your own rock riff using power chords!"
+      ],
+      tips: [
+        "💡 Power chords sound BEST with distortion or overdrive (if you have an amp)",
+        "💡 Keep unused strings quiet by muting them with your palm"
+      ]
+    },
+    17: {
+      title: "Fingerpicking Basics",
+      introduction: "Fingerpicking creates beautiful, delicate sounds. Use your fingers instead of a pick!",
+      sections: [
+        {
+          heading: "Fingerpicking Hand Position",
+          content: [
+            "RIGHT HAND ASSIGNMENT:",
+            "• Thumb (p) - plays strings 6, 5, 4 (bass strings)",
+            "• Index (i) - plays string 3",
+            "• Middle (m) - plays string 2",
+            "• Ring (a) - plays string 1",
+            "",
+            "(p-i-m-a comes from Spanish names for fingers)"
+          ]
+        },
+        {
+          heading: "Basic Fingerpicking Pattern",
+          content: [
+            "PATTERN: p-i-m-a-m-i (repeat)",
+            "",
+            "On C chord:",
+            "Thumb plays 5th string (A)",
+            "Index plays 3rd string (G)",
+            "Middle plays 2nd string (B)",
+            "Ring plays 1st string (E)",
+            "Middle plays 2nd string (B)",
+            "Index plays 3rd string (G)",
+            "",
+            "This creates a flowing, rolling sound"
+          ]
+        },
+        {
+          heading: "Travis Picking Pattern",
+          content: [
+            "This is a FAMOUS fingerpicking pattern!",
+            "",
+            "PATTERN:",
+            "Thumb-Index-Thumb-Middle-Thumb-Index-Thumb-Middle",
+            "",
+            "The thumb ALTERNATES between bass strings",
+            "While the fingers play melody on top",
+            "",
+            "Try this on the C chord for a beautiful sound!"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice p-i-m-a pattern slowly on C chord (5 minutes)",
+        "✅ Try the pattern on G chord",
+        "✅ Learn Travis picking pattern on Em chord",
+        "✅ Play C → G progression with fingerpicking",
+        "✅ Challenge: Play a whole song with fingerpicking instead of strumming"
+      ],
+      tips: [
+        "💡 Keep your picking fingers curved like they're holding a small ball",
+        "💡 Start SUPER slow - speed comes naturally with practice"
+      ]
+    },
+    18: {
+      title: "Scale Introduction",
+      introduction: "Scales are the foundation of solos and melodies! Let's learn the pentatonic scale.",
+      sections: [
+        {
+          heading: "What is a Scale?",
+          content: [
+            "A scale = a series of notes that sound good together",
+            "Think of it as the 'alphabet' of music",
+            "You can create melodies and solos from scales"
+          ]
+        },
+        {
+          heading: "E Minor Pentatonic Scale (Box 1)",
+          content: [
+            "This is the MOST POPULAR scale for rock solos!",
+            "",
+            "FRET POSITIONS:",
+            "String 6: Frets 0, 3",
+            "String 5: Frets 0, 2, 3",
+            "String 4: Frets 0, 2",
+            "String 3: Frets 0, 2",
+            "String 2: Frets 0, 3",
+            "String 1: Frets 0, 3",
+            "",
+            "Start on the 6th string, open E",
+            "Play each note going UP the strings",
+            "Then come back DOWN"
+          ]
+        },
+        {
+          heading: "How to Practice Scales",
+          content: [
+            "1. Play slowly, one note at a time",
+            "2. Say the fret numbers out loud",
+            "3. Use alternate picking: down-up-down-up",
+            "4. Practice going up AND down the scale",
+            "5. Eventually, try playing it from memory"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Play the E minor pentatonic scale UP slowly (10 times)",
+        "✅ Play it DOWN slowly (10 times)",
+        "✅ Play up and down without stopping (5 times)",
+        "✅ Experiment: Play random notes from the scale - they all sound good!",
+        "✅ Challenge: Create a simple melody using only scale notes"
+      ],
+      tips: [
+        "💡 ALL notes in this scale sound good together - you can't play a wrong note!",
+        "💡 This scale works over ANY rock or blues song in E minor"
+      ]
+    },
+    19: {
+      title: "Simple Solos",
+      introduction: "Time to create your own guitar solos! This is where you EXPRESS yourself.",
+      sections: [
+        {
+          heading: "What Makes a Good Solo?",
+          content: [
+            "1. MELODY - it should be easy to remember",
+            "2. RHYTHM - use different note lengths (fast and slow)",
+            "3. EMOTION - play with feeling!",
+            "4. SPACE - silence between notes is important",
+            "",
+            "You don't need to play FAST to sound good!"
+          ]
+        },
+        {
+          heading: "Building Your First Solo",
+          content: [
+            "Use the E minor pentatonic scale you learned",
+            "",
+            "SIMPLE SOLO STRUCTURE:",
+            "1. Start on a low note",
+            "2. Play a few notes going UP",
+            "3. Add a BEND (push the string slightly sideways)",
+            "4. End on a high note",
+            "5. Hold the last note for emphasis",
+            "",
+            "Example solo:",
+            "String 6, fret 0 (hold 2 beats)",
+            "String 5, fret 3 (1 beat)",
+            "String 4, fret 2 (1 beat)",
+            "String 3, fret 2 (hold 4 beats - add a slight bend!)"
+          ]
+        },
+        {
+          heading: "Techniques to Add",
+          content: [
+            "BENDING: Push the string up or down to change pitch slightly",
+            "SLIDING: Play a note, then slide your finger up or down",
+            "HAMMER-ON: Play a note, then 'hammer' another finger down",
+            "VIBRATO: Wiggle your finger back and forth while holding a note"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Create a 5-note solo using the pentatonic scale",
+        "✅ Practice bending notes on the 3rd string (G string)",
+        "✅ Add a slide to your solo",
+        "✅ Record yourself playing your solo",
+        "✅ Challenge: Play your solo over a backing track (find one on YouTube!)"
+      ],
+      tips: [
+        "💡 Simple solos often sound better than complicated ones",
+        "💡 Listen to your favorite guitarists - copy their ideas!"
+      ]
+    },
+    20: {
+      title: "Rhythm & Timing",
+      introduction: "Playing in time is CRUCIAL! Let's master rhythm using a metronome.",
+      sections: [
+        {
+          heading: "What is a Metronome?",
+          content: [
+            "A metronome = a tool that clicks at a steady beat",
+            "It helps you play at a consistent tempo (speed)",
+            "",
+            "Download a FREE metronome app:",
+            "- 'Metronome Beats'",
+            "- 'Pro Metronome'",
+            "",
+            "BPM = Beats Per Minute (how fast the clicks are)"
+          ]
+        },
+        {
+          heading: "How to Practice with a Metronome",
+          content: [
+            "START SLOW:",
+            "1. Set metronome to 60 BPM (one click per second)",
+            "2. Play one strum per click",
+            "3. Make sure your strum happens EXACTLY on the click",
+            "",
+            "GRADUALLY INCREASE:",
+            "Once comfortable at 60 BPM, try 70, then 80, then 90",
+            "",
+            "PRACTICE EXERCISES:",
+            "- Play chords: 1 strum per click",
+            "- Play scales: 1 note per click",
+            "- Play songs: entire song with metronome"
+          ]
+        },
+        {
+          heading: "Understanding Time Signatures",
+          content: [
+            "Most songs are in '4/4 time'",
+            "This means: 4 beats per measure",
+            "",
+            "Count: 1-2-3-4, 1-2-3-4, 1-2-3-4",
+            "",
+            "Try emphasizing beat 1:",
+            "ONE-two-three-four, ONE-two-three-four",
+            "",
+            "This creates the 'pulse' of music"
+          ]
+        }
+      ],
+      activities: [
+        "✅ Practice strumming C chord at 60 BPM (5 minutes)",
+        "✅ Play the Magic Progression at 70 BPM",
+        "✅ Play your favorite song with metronome at 80 BPM",
+        "✅ Practice E minor pentatonic scale at 60 BPM (one note per click)",
+        "✅ Challenge: Play for 10 minutes straight with metronome - no stopping!"
+      ],
+      tips: [
+        "💡 If you can't keep up with the metronome, SLOW IT DOWN - no shame!",
+        "💡 Playing with good timing makes you sound 10x better instantly"
+      ]
+    },
+    21: {
+      title: "Final Performance",
+      introduction: "🎉 YOU MADE IT! Time to show everything you've learned in a COMPLETE performance!",
+      sections: [
+        {
+          heading: "Your Final Performance Song",
+          content: [
+            "Song: 'Journey's End'",
+            "",
+            "INTRO (Fingerpicking):",
+            "[C] (8 beats fingerpicking)",
+            "[Am] (8 beats fingerpicking)",
+            "",
+            "VERSE (Strumming):",
+            "[C] Two months ago I [G] picked up this guitar",
+            "[Am] Didn't know how [Em] far I'd come so far",
+            "[C] Now I play with [G] confidence and pride",
+            "[Am] Music is my [Em] guide",
+            "",
+            "CHORUS (Power & Energy!):",
+            "[F] I've learned to [C] play, I've [G] found my [Am] way",
+            "[F] Every [C] chord, every [G] day",
+            "",
+            "SOLO SECTION (8 bars):",
+            "Play your own solo using E minor pentatonic scale!",
+            "",
+            "FINAL CHORUS:",
+            "[F] I've learned to [C] play, I've [G] found my [Am] way",
+            "[F] Every [C] chord, every [G] day",
+            "[C] (hold and let ring)"
+          ]
+        },
+        {
+          heading: "Performance Preparation Checklist",
+          content: [
+            "✓ Tune your guitar",
+            "✓ Warm up with finger exercises (5 min)",
+            "✓ Practice the song 3 times slowly",
+            "✓ Do one full-speed run-through",
+            "✓ Set up your performance space",
+            "✓ Take a deep breath and BELIEVE in yourself!"
+          ]
+        },
+        {
+          heading: "What You've Accomplished",
+          content: [
+            "🎸 21 lessons completed",
+            "🎸 6+ chords mastered",
+            "🎸 Multiple strumming patterns learned",
+            "🎸 Fingerpicking skills developed",
+            "🎸 Scale knowledge acquired",
+            "🎸 Solo creation ability unlocked",
+            "🎸 Songs performed confidently",
+            "",
+            "YOU ARE A GUITARIST! 🎉🎸⭐"
+          ]
+        },
+        {
+          heading: "Where to Go Next",
+          content: [
+            "1. Learn more songs you love",
+            "2. Join a band or play with friends",
+            "3. Explore different genres (blues, jazz, classical)",
+            "4. Take advanced lessons online or with a teacher",
+            "5. Write your own songs!",
+            "6. Most importantly: KEEP PLAYING EVERY DAY",
+            "",
+            "Remember: Every great guitarist started exactly where you are now."
+          ]
+        }
+      ],
+      activities: [
+        "✅ Learn the entire 'Journey's End' song",
+        "✅ Practice your solo section until you're proud of it",
+        "✅ Perform the complete song for family/friends",
+        "✅ Record your final performance (video or audio)",
+        "✅ Celebrate your achievement - YOU DID IT! 🎉"
+      ],
+      tips: [
+        "💡 Nerves are normal before performing - they mean you CARE!",
+        "💡 If you make a mistake during performance, smile and keep playing",
+        "💡 You've worked hard - be PROUD of yourself! 🌟"
+      ]
+    }
+  };
+
+  const curriculum = {
+    beginner: {
+      title: "🎸 Beginner Level (Weeks 1-3)",
+      color: "bg-green-500",
+      lessons: [
+        { id: 1, title: "Parts of the Guitar", xp: 50, duration: "15 min", challenge: "Label all guitar parts correctly" },
+        { id: 2, title: "How to Hold Your Guitar", xp: 50, duration: "20 min", challenge: "Perfect your posture check" },
+        { id: 3, title: "Tuning Basics", xp: 75, duration: "25 min", challenge: "Tune all 6 strings" },
+        { id: 4, title: "Your First Chord: E Minor", xp: 100, duration: "30 min", challenge: "Play Em cleanly 10 times" },
+        { id: 5, title: "A Minor Chord", xp: 100, duration: "30 min", challenge: "Switch between Em and Am" },
+        { id: 6, title: "Strumming Patterns", xp: 125, duration: "35 min", challenge: "Master down-down-up pattern" },
+        { id: 7, title: "Your First Song!", xp: 150, duration: "40 min", challenge: "Play 2-chord song smoothly" }
+      ]
+    },
+    intermediate: {
+      title: "🎵 Intermediate Level (Weeks 4-6)",
+      color: "bg-blue-500",
+      lessons: [
+        { id: 8, title: "C Major Chord", xp: 125, duration: "30 min", challenge: "Clean C chord transition" },
+        { id: 9, title: "G Major Chord", xp: 125, duration: "30 min", challenge: "4-chord progression" },
+        { id: 10, title: "D Major Chord", xp: 150, duration: "35 min", challenge: "Play common progressions" },
+        { id: 11, title: "Advanced Strumming", xp: 175, duration: "40 min", challenge: "Up-down pattern with muting" },
+        { id: 12, title: "Reading Chord Charts", xp: 150, duration: "30 min", challenge: "Play song from chart" },
+        { id: 13, title: "Finger Exercises", xp: 150, duration: "35 min", challenge: "Speed and accuracy drills" },
+        { id: 14, title: "Your Second Song!", xp: 200, duration: "45 min", challenge: "Perform complete song" }
+      ]
+    },
+    advanced: {
+      title: "🌟 Advanced Level (Weeks 7-8)",
+      color: "bg-purple-500",
+      lessons: [
+        { id: 15, title: "Barre Chords Introduction", xp: 200, duration: "40 min", challenge: "F major barre chord" },
+        { id: 16, title: "Power Chords", xp: 175, duration: "35 min", challenge: "Rock progression" },
+        { id: 17, title: "Fingerpicking Basics", xp: 225, duration: "45 min", challenge: "Travis picking pattern" },
+        { id: 18, title: "Scale Introduction", xp: 200, duration: "40 min", challenge: "Play pentatonic scale" },
+        { id: 19, title: "Simple Solos", xp: 250, duration: "50 min", challenge: "Create your own solo" },
+        { id: 20, title: "Rhythm & Timing", xp: 200, duration: "40 min", challenge: "Play with metronome" },
+        { id: 21, title: "Final Performance", xp: 300, duration: "60 min", challenge: "Play full song with solo!" }
+      ]
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!username.trim()) return;
+    
+    const existingUser = users.find(u => u.name.toLowerCase() === username.toLowerCase());
+    
+    if (existingUser) {
+      setCurrentUser(existingUser);
+    } else {
+      const newUser = {
+        id: `user${Date.now()}`,
+        name: username,
+        level: 1,
+        xp: 0,
+        completedLessons: [],
+        streak: 0
+      };
+      
+      try {
+        await window.storage.set(`user:${newUser.id}`, JSON.stringify(newUser));
+      } catch (error) {
+        console.log('Storage save failed, using in-memory');
+      }
+      
+      setUsers([...users, newUser]);
+      setCurrentUser(newUser);
+    }
+    
+    setShowLogin(false);
+    setUsername('');
+  };
+
+  const completeLesson = async (lessonId, xpGained) => {
+    if (!currentUser || currentUser.completedLessons.includes(lessonId)) return;
+    
+    const updatedUser = {
+      ...currentUser,
+      completedLessons: [...currentUser.completedLessons, lessonId],
+      xp: currentUser.xp + xpGained,
+      level: Math.floor((currentUser.xp + xpGained) / 500) + 1,
+      streak: currentUser.streak + 1
+    };
+    
+    try {
+      await window.storage.set(`user:${updatedUser.id}`, JSON.stringify(updatedUser));
+    } catch (error) {
+      console.log('Storage update failed');
+    }
+    
+    setCurrentUser(updatedUser);
+    setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+  };
+
+  const isLessonUnlocked = (lessonId) => {
+    if (!currentUser) return false;
+    if (lessonId === 1) return true;
+    return currentUser.completedLessons.includes(lessonId - 1);
+  };
+
+  const sortedLeaderboard = [...users].sort((a, b) => b.xp - a.xp);
+
+  if (showLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full">
+          <div className="text-center mb-8">
+            <Music className="w-20 h-20 mx-auto text-purple-600 mb-4" />
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Guitar Quest</h1>
+            <p className="text-gray-600">Master the guitar in 8 weeks!</p>
+          </div>
+          
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none"
+            />
+            <button
+              onClick={handleLogin}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-bold hover:shadow-lg transform hover:scale-105 transition"
+            >
+              Start Your Journey! 🎸
+            </button>
+          </div>
+          
+          <div className="mt-8 p-4 bg-purple-50 rounded-lg">
+            <p className="text-sm text-gray-700 text-center">
+              <Star className="w-4 h-4 inline text-yellow-500" /> Earn XP, complete challenges, and climb the leaderboard!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      {/* Header */}
+      <div className="bg-white shadow-md border-b-4 border-purple-500">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <Music className="w-8 h-8 text-purple-600" />
+              <h1 className="text-2xl font-bold text-gray-800">Guitar Quest</h1>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Hey, {currentUser?.name}!</p>
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  <span className="font-bold text-purple-600">{currentUser?.xp} XP</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-sm font-semibold">Level {currentUser?.level}</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowLogin(true)}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition text-sm"
+              >
+                Switch User
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setActiveTab('lessons')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${
+              activeTab === 'lessons' 
+                ? 'bg-purple-600 text-white shadow-lg' 
+                : 'bg-white text-gray-700 hover:bg-purple-50'
+            }`}
+          >
+            <Target className="w-5 h-5" />
+            Lessons
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${
+              activeTab === 'leaderboard' 
+                ? 'bg-purple-600 text-white shadow-lg' 
+                : 'bg-white text-gray-700 hover:bg-purple-50'
+            }`}
+          >
+            <Trophy className="w-5 h-5" />
+            Leaderboard
+          </button>
+        </div>
+
+        {/* Lessons Tab */}
+        {activeTab === 'lessons' && (
+          <div className="space-y-6">
+            {Object.entries(curriculum).map(([level, section]) => (
+              <div key={level} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className={`${section.color} text-white px-6 py-4`}>
+                  <h2 className="text-2xl font-bold">{section.title}</h2>
+                </div>
+                
+                <div className="p-6 grid gap-4">
+                  {section.lessons.map((lesson) => {
+                    const isCompleted = currentUser?.completedLessons.includes(lesson.id);
+                    const isUnlocked = isLessonUnlocked(lesson.id);
+                    
+                    return (
+                      <div
+                        key={lesson.id}
+                        className={`border-2 rounded-xl p-4 transition ${
+                          isCompleted 
+                            ? 'border-green-500 bg-green-50' 
+                            : isUnlocked
+                            ? 'border-purple-300 bg-white hover:border-purple-500 hover:shadow-md cursor-pointer'
+                            : 'border-gray-200 bg-gray-50 opacity-60'
+                        }`}
+                        onClick={() => isUnlocked && setSelectedLesson(lesson.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                              isCompleted ? 'bg-green-500' : isUnlocked ? 'bg-purple-500' : 'bg-gray-300'
+                            }`}>
+                              {isCompleted ? (
+                                <CheckCircle className="w-6 h-6 text-white" />
+                              ) : isUnlocked ? (
+                                <Unlock className="w-6 h-6 text-white" />
+                              ) : (
+                                <Lock className="w-6 h-6 text-white" />
+                              )}
+                            </div>
+                            
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg text-gray-800">{lesson.title}</h3>
+                              <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  {lesson.duration}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 text-yellow-500" />
+                                  {lesson.xp} XP
+                                </span>
+                              </div>
+                              <p className="text-sm text-purple-600 mt-2">🎯 {lesson.challenge}</p>
+                            </div>
+                          </div>
+                          
+                          {isCompleted && (
+                            <div className="px-6 py-2 bg-green-500 text-white rounded-lg font-semibold">
+                              ✓ Done
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Leaderboard Tab */}
+        {activeTab === 'leaderboard' && (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-4">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <Trophy className="w-8 h-8" />
+                Top Guitar Heroes
+              </h2>
+            </div>
+            
+            <div className="p-6">
+              {sortedLeaderboard.map((user, index) => (
+                <div
+                  key={user.id}
+                  className={`flex items-center justify-between p-4 rounded-lg mb-3 ${
+                    user.id === currentUser?.id 
+                      ? 'bg-purple-100 border-2 border-purple-500' 
+                      : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${
+                      index === 0 ? 'bg-yellow-400 text-white' :
+                      index === 1 ? 'bg-gray-300 text-white' :
+                      index === 2 ? 'bg-orange-400 text-white' :
+                      'bg-gray-200 text-gray-700'
+                    }`}>
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                    </div>
+                    
+                    <div>
+                      <p className="font-bold text-lg text-gray-800">{user.name}</p>
+                      <p className="text-sm text-gray-600">Level {user.level} • {user.completedLessons.length} lessons completed</p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end">
+                      <Star className="w-5 h-5 text-yellow-500" />
+                      <span className="font-bold text-xl text-purple-600">{user.xp}</span>
+                    </div>
+                    <p className="text-sm text-gray-600">🔥 {user.streak} day streak</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Lesson Content Modal */}
+      {selectedLesson && lessonContent[selectedLesson] && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-4xl w-full my-8 shadow-2xl flex flex-col max-h-[95vh]">
+            {/* Modal Header - Fixed */}
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 flex-shrink-0 rounded-t-2xl">
+              <div className="flex justify-between items-start">
+                <div className="flex-1 pr-4">
+                  <h2 className="text-3xl font-bold mb-2">
+                    Lesson {selectedLesson}: {lessonContent[selectedLesson].title}
+                  </h2>
+                  <p className="text-purple-100">{lessonContent[selectedLesson].introduction}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedLesson(null)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition flex-shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {lessonContent[selectedLesson].sections.map((section, idx) => (
+                <div key={idx} className="mb-6">
+                  <h3 className="text-xl font-bold text-purple-700 mb-3 flex items-center gap-2">
+                    <Music className="w-5 h-5" />
+                    {section.heading}
+                  </h3>
+                  <div className="bg-purple-50 rounded-lg p-4 space-y-2">
+                    {section.content.map((item, i) => (
+                      <p key={i} className="text-gray-700 leading-relaxed">
+                        {item}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Activities Section */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-green-700 mb-3 flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Practice Activities
+                </h3>
+                <div className="bg-green-50 rounded-lg p-4 space-y-2">
+                  {lessonContent[selectedLesson].activities.map((activity, i) => (
+                    <p key={i} className="text-gray-700 leading-relaxed">
+                      {activity}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tips Section */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-blue-700 mb-3 flex items-center gap-2">
+                  <Award className="w-5 h-5" />
+                  Pro Tips
+                </h3>
+                <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                  {lessonContent[selectedLesson].tips.map((tip, i) => (
+                    <p key={i} className="text-gray-700 leading-relaxed">
+                      {tip}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Scroll Indicator for Mobile */}
+              <div className="text-center text-gray-400 text-sm py-2">
+                ↓ Scroll down to mark as complete ↓
+              </div>
+            </div>
+
+            {/* Modal Footer - Fixed at Bottom */}
+            <div className="bg-gray-50 p-6 border-t flex justify-between items-center flex-shrink-0 rounded-b-2xl">
+              <button
+                onClick={() => setSelectedLesson(null)}
+                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                Close
+              </button>
+              
+              {!currentUser?.completedLessons.includes(selectedLesson) && (
+                <button
+                  onClick={() => {
+                    const lesson = Object.values(curriculum)
+                      .flatMap(section => section.lessons)
+                      .find(l => l.id === selectedLesson);
+                    if (lesson) {
+                      completeLesson(lesson.id, lesson.xp);
+                      setSelectedLesson(null);
+                    }
+                  }}
+                  className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:shadow-lg transform hover:scale-105 transition flex items-center gap-2"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Mark as Complete
+                </button>
+              )}
+
+              {currentUser?.completedLessons.includes(selectedLesson) && (
+                <div className="px-8 py-3 bg-green-500 text-white rounded-lg font-bold flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  ✓ Completed!
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default GuitarLearningApp;
